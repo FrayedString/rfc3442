@@ -1,0 +1,401 @@
+<html>
+    <head>
+        <title>PfSense RFC 3442 Builder</title>
+    </head>
+    <body>
+        <div style="width: 800px; display: grid; grid-template-columns: 400px 400px; position: absolute; top: 20px; left: 50px; right: 0;">
+            <div style="grid-column: 1 / 3; grid-row: 1;">
+                <h2>RFC 3442 Builder for PfSense</h2>
+            </div>
+            <div style="grid-column: 1; grid-row: 2;">
+                <div>
+                    <div>Network:</div>
+                    <div style="padding-left: 30px;">
+                        <span>
+                            <select id="ddlSubnet" name="ddlSubnet" onchange="SubnetSelected();"></select>
+                        </span>
+                        <span style="display: inline-block; width: 12px; text-align: center; font-weight: bold;">/</span>
+                        <span>
+                            <select id="ddlOctet1" name="ddlOctet1"></select>
+                            <select id="ddlOctet2" name="ddlOctet2"></select>
+                            <select id="ddlOctet3" name="ddlOctet3"></select>
+                            <select id="ddlOctet4" name="ddlOctet4"></select>
+                        </span>
+                    </div>
+                </div>
+                <div style="margin-top: 7px;">
+                    <div>Gateway: </div>
+                    <div style="padding-left: 30px;">
+                        <span>
+                            <select id="ddlGateway1" name="ddlGateway1"></select>
+                            <select id="ddlGateway2" name="ddlGateway2"></select>
+                            <select id="ddlGateway3" name="ddlGateway3"></select>
+                            <select id="ddlGateway4" name="ddlGateway4"></select>
+                        </span>
+                        <span style="display: inline-block; width: 12px;"></span>
+                        <span>
+                            <button id="btnAdd" onclick="AddRoute();">Add</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div style="grid-column: 2; grid-row: 2;">
+                <div style="width: 100%; display: grid; grid-template-columns: 300px 100px;">
+                    <div style="grid-column: 1; grid-row: 1;">
+                        <select id="routes" name="routes" size="5" style="width: 300px;">
+                            <!--
+                            <option>10.0.0.0 / 8 -&gt; 172.16.10.126</option>
+                            <option>172.16.0.0 / 12 -&gt; 172.16.10.126</option>
+                            <option>192.168.0.0 / 16 -&gt; 172.16.10.126</option>-->
+                        </select>
+                    </div>
+                    <div style="grid-column: 2; grid-row: 1; padding-left: 5px;">
+                        <button id="btnDel" onclick="RemoveRoute();">Remove<br/>Selected</button>
+                    </div>
+                </div>
+                
+            </div>
+            <div style="grid-column: 1; grid-row: 3"><!-- This space intentionally left blank --></div>
+            <div style="grid-column: 2; grid-row: 3; padding-top: 5px;">
+                <button onclick="Build();">Build</button>
+            </div>
+            <div style="grid-column: 1 / 3; grid-row: 4">
+                <div style="padding-top: 40px;">
+                    <span>
+                        <input id="Result" type="text" style="width: 700px;" />
+                    </span>
+                    <span style="padding-left: 5px;">
+                        <button onclick="Import();">Import</button>
+                    </span>
+                </div>
+            </div>
+            <div style="grid-column: 1 / 3; grid-row: 5; padding-top: 50px;">
+                <a href="https://www.rfc-editor.org/rfc/rfc3442">RFC 3442</a>
+            </div>
+        </div>
+    </body>
+
+    <script type="text/javascript">
+        
+        let oct1 = document.querySelector("#ddlOctet1");
+        let oct2 = document.querySelector("#ddlOctet2");
+        let oct3 = document.querySelector("#ddlOctet3");
+        let oct4 = document.querySelector("#ddlOctet4");
+        let sub = document.querySelector("#ddlSubnet");
+
+        let gate1 = document.querySelector("#ddlGateway1");
+        let gate2 = document.querySelector("#ddlGateway2");
+        let gate3 = document.querySelector("#ddlGateway3");
+        let gate4 = document.querySelector("#ddlGateway4");
+
+        let routesBox = document.querySelector("#routes");
+
+        function SubnetSelected() {
+            let bits = parseInt(sub.value);
+
+            if(bits >= 25) {
+                oct1.disabled = "";
+                oct2.disabled = "";
+                oct3.disabled = "";
+                oct4.disabled = "";
+            }
+            else if(bits >= 17) {
+                oct1.disabled = "";
+                oct2.disabled = "";
+                oct3.disabled = "";
+                oct4.disabled = "disabled";
+
+                oct4.value = "0";
+            }
+            else if(bits >= 9) {
+                oct1.disabled = "";
+                oct2.disabled = "";
+                oct3.disabled = "disabled";
+                oct4.disabled = "disabled";
+
+                oct3.value = "0";
+                oct4.value = "0";
+            }
+            else if(bits >= 1) {
+                oct1.disabled = "";
+                oct2.disabled = "disabled";
+                oct3.disabled = "disabled";
+                oct4.disabled = "disabled";
+
+                oct2.value = "0";
+                oct3.value = "0";
+                oct4.value = "0";
+            }
+            else {
+                oct1.disabled = "disabled";
+                oct2.disabled = "disabled";
+                oct3.disabled = "disabled";
+                oct4.disabled = "disabled";
+
+                oct1.value = "0";
+                oct2.value = "0";
+                oct3.value = "0";
+                oct4.value = "0";
+            }
+        }
+
+
+        function AddRoute() {
+            let route = `${oct1.value}.${oct2.value}.${oct3.value}.${oct4.value} / ${sub.value} -> ${gate1.value}.${gate2.value}.${gate3.value}.${gate4.value}`
+
+            oct1.value = 0;
+            oct2.value = 0;
+            oct3.value = 0;
+            oct4.value = 0;
+            sub.value = 0;
+
+            gate1.value = 0;
+            gate2.value = 0;
+            gate3.value = 0;
+            gate4.value = 0;
+
+            let o = document.createElement("option");
+            o.text = route;
+
+            routesBox.appendChild(o);
+
+
+            SubnetSelected();
+            sub.focus();
+        }
+
+
+        function RemoveRoute() {
+            routesBox.remove(routesBox.selectedIndex);
+        }
+
+
+        function Build() {
+            let theHex = Array.apply(null, routesBox.options).map(function (r) {
+                let route = r.text.replace(" / ", ",").replace(" -> ", ",").split(",");
+
+
+                //Mask goes first
+                let mask = parseInt(route[1]);
+                let meaningfulOctets = 0;
+
+                if(mask >= 25) {
+                    meaningfulOctets = 4;
+                }
+                else if (mask >= 17) {
+                    meaningfulOctets = 3;
+                }
+                else if (mask >= 9) {
+                    meaningfulOctets = 2;
+                }
+                else if (mask >= 1) {
+                    meaningfulOctets = 1;
+                }
+
+                let hex = parseInt(route[1]).toString(16).padStart(2, "0");
+
+
+                //Followed by network (with significant octets only)
+                if(meaningfulOctets == 0) {
+                    hex += ":00";
+                }
+                else {
+                    hex += ":" + route[0].split(".").slice(0, meaningfulOctets).map(function (octet) {
+                        return parseInt(octet).toString(16).padStart(2, "0");
+                    }).join(":");
+                }
+
+
+
+                //Finally, the Gateway
+                hex += ":" + route[2].split(".").map(function (octet) {
+                        return parseInt(octet).toString(16).padStart(2, "0");
+                    }).join(":");
+
+                return hex;
+            }).join(":");
+
+
+            document.querySelector("#Result").value = theHex;
+        }
+
+
+
+        const octetRegex = /^[\dabcdef][\dabcdef]$/;
+
+        function Import() {
+            let data = document.querySelector("#Result").value.toLowerCase().split(":").reverse();
+
+            if(data.length < 6){
+                alert("Invalid input");
+                return;
+            }
+
+
+            let position = -1;
+
+            let routes = new Array();
+
+            while(data.length > 0) {
+                position++;
+                console.log(`Position ${position}.  Attempting to parse network mask`);
+
+                //Mask is first
+                let mask = data.pop();
+                
+
+                if(!/^(?:[01][\dabcdef])|(?:20)$/.test(mask)) {
+                    alert(`Invalid input.  Looking for a network mask at position ${position} but found invalid value '${mask}'.  Check console log for debugging help`);
+                    return;
+                }
+
+                console.log(`Found network mask: ${mask} (hex)`);
+                mask = parseInt(mask, 16).toString();
+
+
+                let network = new Array();
+
+                {
+                    //Determine how many meaningful octets we expect based on the mask
+                    let meaningfulOctets = 1;
+
+                    if(mask >= 25) {
+                        meaningfulOctets = 4;
+                    }
+                    else if (mask >= 17) {
+                        meaningfulOctets = 3;
+                    }
+                    else if (mask >= 9) {
+                        meaningfulOctets = 2;
+                    }
+
+                    console.log(`Based on mask of '${mask}' (dec), attempting to load ${meaningfulOctets} network octet(s)`);
+
+                    if(data.length < meaningfulOctets) {
+                        console.log(`Position: ${position}.  Expected to load ${meaningfulOctets} but there are only ${data.length} data segments remaining.`)
+                        alert(`Invalid input.  Check console log for debugging help`);
+                        return;
+                    }
+
+
+                    //Read the octets from the data stream
+                    while(meaningfulOctets > 0) {
+                        let octet = data.pop();
+                        position++;
+
+                        console.log(`Found ${octet}`);
+
+
+                        if(!octetRegex.test(octet)) {
+                            console.log(`Position: ${position}.  ${octet} is not a valid ipv4 octet value!`);
+                            alert("Invalid input.  Check console log for debugging help");
+                            return;
+                        }
+
+                        network.push(parseInt(octet, 16).toString());
+
+                        meaningfulOctets--;
+                    }
+                }
+
+                //Append zeroes until network is 4 octets
+                while(network.length < 4) {
+                    network.push(0);
+                }
+
+                //convert to string
+                network = network.join(".");
+                console.log(`Loaded network: ${network}`);
+
+
+                //Now load the gateway (always 4 octets)
+                let gateway = new Array();
+
+                {
+                    console.log("Attempting to load gateway from data stream")
+
+                    if(data.length < 4) {
+                        console.log(`Position: ${position}.  Expected 4 octets for the gateway but found only ${data.length} data fields remaining`);
+                        alert("Invalid input.  Check console log for debugging help");
+                        return;
+                    }
+
+                    for(let g = 0; g < 4; g++) {
+                        let gOctet = data.pop();
+                        position++;
+
+                        console.log(`Found ${gOctet}`);
+
+                        if(!octetRegex.test(gOctet)) {
+                            console.log(`Position: ${position}.  ${gOctet} is not a valid ipv4 octet value!`);
+                            alert("Invalid input.  Check console log for debugging help");
+                            return;
+                        }
+
+                        gateway.push(parseInt(gOctet, 16).toString());
+                    }
+                }
+
+                gateway = gateway.join(".");
+                console.log(`Loaded gateway: ${gateway}`);
+        
+                let fullRoute = network + " / " + mask + " -> " + gateway;
+                console.log(`Done loading: ${fullRoute}`);
+
+                routes.push(fullRoute);
+            }
+
+
+            routesBox.innerHTML = "";
+            
+            routes.forEach(function (route) {
+                let o = document.createElement("option");
+                o.text = route;
+
+                routesBox.appendChild(o);
+            });
+        }
+
+
+
+        function Start() {
+
+            function addOption(selectBox) {
+                var opt = document.createElement("option");
+                    opt.value = i;
+                    opt.text = i;
+
+                selectBox.appendChild(opt);
+            }
+
+            let i = 0;
+
+
+            while(i <= 255) {
+                if(i <= 223) {
+                    addOption(oct1);
+                    addOption(gate1);
+                }
+
+                if(i <= 32) {
+                    addOption(sub);
+                }
+
+                addOption(oct2);
+                addOption(oct3);
+                addOption(oct4);
+
+                addOption(gate2);
+                addOption(gate3);
+                addOption(gate4);
+
+                i = i + 1;
+            }
+
+            SubnetSelected();
+            sub.focus();
+        }
+
+        window.addEventListener("load", (event) => { Start(); });
+    </script>
+</html>
