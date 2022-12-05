@@ -192,15 +192,11 @@
 
 
                 //Followed by network (with significant octets only)
-                if(meaningfulOctets == 0) {
-                    hex += ":00";
-                }
-                else {
+                if(meaningfulOctets !== 0) {
                     hex += ":" + route[0].split(".").slice(0, meaningfulOctets).map(function (octet) {
                         return parseInt(octet).toString(16).padStart(2, "0");
                     }).join(":");
                 }
-
 
 
                 //Finally, the Gateway
@@ -253,7 +249,7 @@
 
                 {
                     //Determine how many meaningful octets we expect based on the mask
-                    let meaningfulOctets = 1;
+                    let meaningfulOctets = 0;
 
                     if(mask >= 25) {
                         meaningfulOctets = 4;
@@ -264,8 +260,19 @@
                     else if (mask >= 9) {
                         meaningfulOctets = 2;
                     }
+                    else if (mask >= 1) {
+                        meaningfulOctets = 1
+                    }
+                    else if (mask == 0) {
+                        console.log("")
+                    }
 
-                    console.log(`Based on mask of '${mask}' (dec), attempting to load ${meaningfulOctets} network octet(s)`);
+                    if(mask == 0) {
+                        console.log("Found default route.");
+                    }
+                    else {
+                        console.log(`Based on mask of '${mask}' (dec), attempting to load ${meaningfulOctets} network octet(s)`);
+                    }                    
 
                     if(data.length < meaningfulOctets) {
                         console.log(`Position: ${position}.  Expected to load ${meaningfulOctets} but there are only ${data.length} data segments remaining.`)
