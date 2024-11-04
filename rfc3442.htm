@@ -216,7 +216,15 @@
         const octetRegex = /^[\dabcdef][\dabcdef]$/;
 
         function Import() {
-            let data = document.querySelector("#Result").value.toLowerCase().split(":").reverse();
+            let data = document.querySelector("#Result").value.toLowerCase();
+            if(data.startsWith("0x")) {
+                data = data.slice(2);
+            }
+            if(data.indexOf(":") == -1) {
+                data = data.match(/.{2}/g).reverse();
+            } else {
+                data = data.split(":").reverse();
+            }
 
             if(data.length < 6){
                 alert("Invalid input");
